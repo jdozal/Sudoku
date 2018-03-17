@@ -105,6 +105,7 @@ public class BoardView extends View {
     /** Draw horizontal and vertical grid lines. */
     private void drawGrid(Canvas canvas) {
         final float maxCoord = maxCoord();
+        int sqrt = (int)Math.sqrt(board.size);
         canvas.drawRect(0, 0, maxCoord, maxCoord, boardPaint);
         Paint grayPaint = new Paint();
         grayPaint.setColor(Color.GRAY);
@@ -123,11 +124,11 @@ public class BoardView extends View {
         canvas.drawLine(maxCoord,0,maxCoord,maxCoord, blackPaint);
 
         //Vertical bold lines
-        canvas.drawLine(maxCoord/3,0,maxCoord/3,maxCoord,blackPaint);
-        canvas.drawLine((maxCoord/3)*2, 0, (maxCoord/3)*2,maxCoord,blackPaint);
+        canvas.drawLine(maxCoord/sqrt,0,maxCoord/sqrt,maxCoord,blackPaint);
+        canvas.drawLine((maxCoord/sqrt)*2, 0, (maxCoord/sqrt)*2,maxCoord,blackPaint);
         //Horizontal bold lines
-        canvas.drawLine(0,maxCoord/3,maxCoord,maxCoord/3,blackPaint);
-        canvas.drawLine(0,(maxCoord/3)*2,maxCoord,(maxCoord/3)*2, blackPaint);
+        canvas.drawLine(0,maxCoord/sqrt,maxCoord,maxCoord/sqrt,blackPaint);
+        canvas.drawLine(0,(maxCoord/sqrt)*2,maxCoord,(maxCoord/sqrt)*2, blackPaint);
 
         //Vertical
         for (int i = 1; i < boardSize; i++){
@@ -150,12 +151,12 @@ public class BoardView extends View {
         Paint prefilledColor = new Paint();
         Paint textColor = new Paint();
         textColor.setColor(Color.BLUE);
-        textColor.setTextSize(50);
+        textColor.setTextSize(getTextSize());
         prefilledColor.setColor(Color.BLACK);
-        prefilledColor.setTextSize(50);
+        prefilledColor.setTextSize(getTextSize());
 
-        int gridSpacing = getHeight()/ 9;
-        int boardSize = 9 * gridSpacing;
+        int gridSpacing = getHeight()/ board.size;
+        int boardSize = board.size * gridSpacing;
 
         int startX = (getWidth() - boardSize)/(getWidth()/2);
         int startY = (getHeight() - boardSize)/(getHeight()/2);
@@ -196,6 +197,12 @@ public class BoardView extends View {
         return true;
     }
 
+    private int getTextSize() {
+        if(board.size == 9){
+            return 50;
+        }
+        return 150;
+    }
     /**
      * Given screen coordinates, locate the corresponding square of the board, or
      * -1 if there is no corresponding square in the board.

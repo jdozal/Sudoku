@@ -60,14 +60,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        size = 9;
-        board = new Board(size, Board.Level.HARD_9);
+        size = 4;
+        board = new Board(size, Board.Level.HARD_4);
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);
 
         numberButtons = new ArrayList<>(numberIds.length);
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i <= size; i++) {
             final int number = i; // 0 for delete button
             View button = findViewById(numberIds[i]);
             button.setOnClickListener(e -> numberClicked(number));
@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void numberClicked(int n) {
         board.addNumber(squareX,squareY,n);
-
+        boardView.postInvalidate();
         //Gets selected square's coords and inserts number
 //        if(board.grid[squareY][squareX] == 0){
 //            board.insertNumber(squareX, squareY, n);
@@ -147,8 +147,8 @@ public class MainActivity extends AppCompatActivity {
      * @param x 0-based row index of the selected square.
      */
     private void squareSelected(int x, int y) {
-        squareX = x;
-        squareY = y;
+        squareY = x;
+        squareX = y;
         toast(String.format("Square selected: (%d, %d)", x, y));
     }
 
