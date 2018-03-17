@@ -1,191 +1,242 @@
 package edu.utep.cs.cs4330.sudoku.model;
 
+import java.util.ArrayList;
 import java.util.Random;
 
-/** An abstraction of Sudoku puzzle. */
 public class Board {
+	public int size;
+	public ArrayList<Square> grid;
+	ArrayList<Square> solutionGrid;
+	Level level;
 
-    /** Size of this board (number of columns/rows). */
-    public final int size;
-
-    public int[][] grid;
-    public boolean[][] prefilled;
-    public boolean win;
-    public boolean inRow, inCol, inSquare, isPrefilled;
-
-
-
-
-    /** Create a new board of the given size. */
-    public Board(int size) {
-        this.size = size;
-
-        initializeGrid();
-        addRandomNumbers(30);
+    public enum Level {
+        EASY_9, MEDIUM_9, HARD_9, EASY_4, MEDIUM_4, HARD_4;
     }
+	public Board(int s, Level l) {
+		grid = new ArrayList<Square>();
+		solutionGrid = new ArrayList<Square>();
+		this.size = s;
+		this.level = l;
+		fillGrid();
+		printBoard();
+		setLevel();
+	}
 
+	public Square getSquare(int x, int y) {
+		for (Square square : grid) {
+			if (square.x == x && square.y == y)
+				return square;
+		}
+		System.out.printf("Square with coordinates x = %d, y = %d not found.", x, y);
+		return null;
+	}
 
+	void fillGrid() {
+		int initialVal = 0;
+		for (int i = 0; i < size; i++) {
+			int sqrt = (int) Math.sqrt(size);
+			initialVal = (i % sqrt == 0) ? (i / sqrt) : initialVal + sqrt;
+			for (int j = 0; j < size; j++) {
+				Square sq = new Square(i, j, (initialVal + j) % size + 1);
+				sq.prefilled = true;
+				grid.add(sq);
+				solutionGrid.add(sq);
+			}
+		}
+		for (int i = 0; i <= size*3; i++) {
+			randomizeColumn();
+			randomizeRow();
+		}
 
-    public void initializeGrid() {
-        grid = new int[size][size];
-        prefilled = new boolean[size][size];
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid.length; j++) {
-                grid[i][j] = 0;
-                prefilled[i][j] = false;
-            }
-        }
+	}
 
-    }
+	void randomizeColumn() {
+		Random rand = new Random();
+		int sqrt = (int) Math.sqrt(size);
+		int group = rand.nextInt(sqrt) * sqrt;
+		int col1 = group + rand.nextInt(sqrt);
+		int col2 = group + rand.nextInt(sqrt);
+		while (col1 == col2)
+			col2 = group + rand.nextInt(sqrt);
+		// System.out.println(group);
+		// System.out.printf("col1= %d, col2=%d\n\n", col1,col2);
 
-    public void insertNumber(int x, int y, int n) {
-            // check if valid number
-            if (!checkNum(x, y, n)) {
-                System.out.println("Not a valid number");
-            }
-            System.out.println("Valid number, inserting " + n);
-            checkWin();
-        printGrid();
+		for (int i = 0; i < size; i++) {
+			Square sq1 = getSquare(i, col1);
+			Square sq2 = getSquare(i, col2);
 
-    }
+			int temp = sq1.getValue();
+			sq1.setValue(sq2.getValue());
+			sq2.setValue(temp);
+		}
 
-    private boolean checkNum(int x, int y, int n) {
-        // check if is outside grid or if is not between 1 and 9
-        if (n > 9 || x < 0 || y < 0 || x > 8 || y > 8) {
-            return false;
-        }
+	}
 
-        // check column
-        if (!checkColumn(x, n)) {
-            System.out.println("Number already in column");
-            inCol = true;
-            return false;
-        }
+	void randomizeRow() {
+		Random rand = new Random();
+		int sqrt = (int) Math.sqrt(size);
+		int group = rand.nextInt(sqrt) * sqrt;
+		int row1 = group + rand.nextInt(sqrt);
+		int row2 = group + rand.nextInt(sqrt);
+		while (row1 == row2)
+			row2 = group + rand.nextInt(sqrt);
 
-        // check row
-        if (!checkRow(y, n)) {
-            System.out.println("Number already in row");
-            inRow = true;
-            return false;
-        }
+		for (int i = 0; i < size; i++) {
+			Square sq1 = getSquare(row1, i);
+			Square sq2 = getSquare(row2, i);
 
-        // check square
-        if (!checkSquare(y, x, n)) {
-            System.out.println("Number already in square");
-            inSquare = true;
-            return false;
-        }
+			int temp = sq1.getValue();
+			sq1.setValue(sq2.getValue());
+			sq2.setValue(temp);
+		}
 
-        // if number passes every test add to grid
-        grid[y][x] = n;
-        return true;
-    }
+	}
 
-    private boolean checkSquare(int x, int y, int n) {
-        int row = (int) (Math.floor((x/3))) * 3;
-        int col = (int) (Math.floor((y/3))) * 3;
+	void removeSquares(int number) {
+		Random rand = new Random();
+		int x = 0;
+		int y = 0;
+		for (int i = 0; i < number; i++) {
+			x = rand.nextInt(size);
+			y = rand.nextInt(size);
+			while (!getSquare(x, y).prefilled) {
+				x = rand.nextInt(size);
+				y = rand.nextInt(size);
+				// System.out.printf("x=%d, y=%d, i=%d\n", x,y,i);
+			}
+			getSquare(x, y).prefilled = false;
+			getSquare(x, y).added = false;
+		}
+	}
 
-        for(int i = row; i < row+3; i++){
-            for(int j = col; j < col+3; j++){
-                if(grid[i][j] == n)
+	public boolean isWin() {
+		for (Square square : grid) {
+			if (!square.added)
+				return false;
+		}
+		return true;
+	}
+
+	public void removeNumber(int x, int y) {
+		Square sqr = getSquare(x, y);
+		sqr.added = false;
+	}
+
+	public void addNumber(int x, int y, int v) {
+		Square sqr;
+		if (validNumber(x, y, v)) {
+			sqr = getSquare(x, y);
+			sqr.added = true;
+			sqr.setValue(v);
+			printBoard();
+		}
+	}
+
+	public boolean validNumber(int x, int y, int v) {
+		// check pre filled
+		if(getSquare(x, y).prefilled){
+			System.out.println("PREFILLED");
+			return false;
+		}
+		
+		// check column
+		if (!inColumn(x, v)) {
+			System.out.println("SAME ROW");
+			return false;
+		}
+
+		// check row
+		if (!inRow(y, v)) {
+			System.out.println("SAME COLUMN");
+			return false;
+		}
+
+		// check square
+		if (!inSquare(x, y, v)) {
+			System.out.println("SAME SQUARE");
+			return false;
+		}
+
+		return true;
+	}
+
+	public boolean inRow(int x, int v) {
+		Square sqr;
+		for (int col = 0; col < size; col++) {
+			sqr = getSquare(x, col);
+			if (sqr.getValue() == v && sqr.added) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public boolean inColumn(int y, int v) {
+		Square sqr;
+		for (int row = 0; row < size; row++) {
+			sqr = getSquare(row, y);
+			if (sqr.getValue() == v && sqr.added) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	public boolean inSquare(int x, int y, int v){
+		int sqrt = (int) Math.sqrt(size);
+		int row = (int) (Math.floor((y / sqrt))) * sqrt;
+        int col = (int) (Math.floor((x / sqrt))) * sqrt;
+        Square sqr;
+        for (int i = row; i < row + sqrt; i++) {
+            for (int j = col; j < col + sqrt; j++) {
+            	sqr = getSquare(j, i);
+                if (sqr.getValue() == v && sqr.added)
                     return false;
             }
         }
         return true;
-    }
+	}
+	
+	void setLevel() {
+		switch (level) {
+		case EASY_9:
+			removeSquares(51);
+			break;
+		case MEDIUM_9:
+			removeSquares(58);
+			break;
+		case HARD_9:
+			removeSquares(64);
+			break;
+		case EASY_4:
+			removeSquares(6);
+			break;
+		case MEDIUM_4:
+			removeSquares(9);
+			break;
+		case HARD_4:
+			removeSquares(12);
+			break;
+		default:
+			break;
+		}
+	}
 
+	void printBoard() {
+		System.out.println("\n+===+===+===+===+===+===+===+===+===+");
+		for (int i = 0; i < this.size; i++) {
+			for (int j = 0; j < this.size; j++) {
+				Square sq = getSquare(i, j);
+				System.out.print("| " + (sq.added ? sq.getValue() : " ") + " ");
+			}
+			System.out.print("|");
+			if (i % 3 == 2) {
+				System.out.println("\n+===+===+===+===+===+===+===+===+===+");
 
-    private boolean checkRow(int y, int n) {
-        for (int row = 0; row < grid.length; row++) {
-            if (grid[y][row] == n) {
-                return false;
-            }
-        }
-        return true;
-    }
+			} else {
+				System.out.println("\n+---+---+---+---+---+---+---+---+---+");
+			}
+		}
+	}
 
-    private boolean checkColumn(int x, int n) {
-        for (int col = 0; col < grid.length; col++) {
-            if (grid[col][x] == n) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void checkWin() {
-        int sum = 0;
-        for (int i = 0; i < grid.length; i++) {
-            for (int j = 0; j < grid.length; j++) {
-                sum += grid[i][j];
-                // if there are still empty squares
-                if (grid[i][j] == 0) {
-                    return;
-                }
-            }
-        }
-        // double check if sum of numbers is correct
-        if (sum == 405) {
-            win = true;
-            System.out.println("YOU WIN!");
-        }
-    }
-
-    private void insertPrefilled(int x, int y){
-        prefilled[y][x] = true;
-    }
-
-    private void addRandomNumbers(int numbers) {
-        Random rand = new Random();
-        if (numbers == 0) {
-            return;
-        }
-        // nextInt is normally exclusive of the top value,
-        // so add 1 to make it inclusive
-        int randomX = rand.nextInt(10);
-        int randomY = rand.nextInt(10);
-        int randomN = rand.nextInt(9) + 1;
-        if (!checkNum(randomX, randomY, randomN)) {
-            addRandomNumbers(numbers);
-        } else {
-            insertPrefilled(randomX, randomY);
-            addRandomNumbers(numbers-1);
-        }
-    }
-
-
-    public void printGrid() {
-        System.out.println("\n+===+===+===+===+===+===+===+===+===+");
-        for (int i = 0; i < grid.length; i++) {
-            System.out.print("|");
-            for (int j = 0; j < grid.length; j++) {
-                if (j % 3 == 2) {
-                    System.out.print(" " + ((grid[j][i]==0) ? " ":grid[j][i]) + " !");
-                } else {
-                    System.out.print(" " + ((grid[j][i]==0) ? " ":grid[j][i]) + " |");
-                }
-            }
-            if (i % 3 == 2) {
-                System.out.println("\n+===+===+===+===+===+===+===+===+===+");
-
-            } else {
-                System.out.println("\n+---+---+---+---+---+---+---+---+---+");
-            }
-        }
-    }
-
-    public void insertZero(int x, int y){
-        if(!prefilled[y][x]) {
-            grid[y][x] = 0;
-        } else{
-            isPrefilled = true;
-        }
-    }
-
-    /** Return the size of this board. */
-    public int size() {
-    	return size;
-    }
-
-    // WRITE YOUR CODE HERE ..
 }

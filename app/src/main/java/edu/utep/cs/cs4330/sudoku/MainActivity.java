@@ -54,19 +54,20 @@ public class MainActivity extends AppCompatActivity {
 
     private int squareX;
     private int squareY;
+    private int size;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        board = new Board(9);
+        size = 9;
+        board = new Board(size, Board.Level.HARD_9);
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);
 
         numberButtons = new ArrayList<>(numberIds.length);
-        for (int i = 0; i < numberIds.length; i++) {
+        for (int i = 0; i < size; i++) {
             final int number = i; // 0 for delete button
             View button = findViewById(numberIds[i]);
             button.setOnClickListener(e -> numberClicked(number));
@@ -108,32 +109,34 @@ public class MainActivity extends AppCompatActivity {
      *          or 0 for the delete button.
      */
     public void numberClicked(int n) {
-        //Gets selected square's coords and inserts number
-        if(board.grid[squareY][squareX] == 0){
-            board.insertNumber(squareX, squareY, n);
-            if(board.inSquare){
-                toast("Number already in 3x3 square");
-                board.inSquare = false;
-            }
-            else if(board.inRow){
-                toast("Number already in row");
-                board.inRow = false;
-            }
-            else if(board.inCol){
-                toast("Number already in column");
-                board.inCol = false;
-            }
+        board.addNumber(squareX,squareY,n);
 
-            boardView.postInvalidate();
-        } else if(board.grid[squareY][squareX] != 0 && n==0){
-            board.insertZero(squareX,squareY);
-            if(board.isPrefilled)
-                toast("Can't delete prefilled value");
-            boardView.postInvalidate();
-        }
-        else{
-            toast("Space is taken.");
-        }
+        //Gets selected square's coords and inserts number
+//        if(board.grid[squareY][squareX] == 0){
+//            board.insertNumber(squareX, squareY, n);
+//            if(board.inSquare){
+//                toast("Number already in 3x3 square");
+//                board.inSquare = false;
+//            }
+//            else if(board.inRow){
+//                toast("Number already in row");
+//                board.inRow = false;
+//            }
+//            else if(board.inCol){
+//                toast("Number already in column");
+//                board.inCol = false;
+//            }
+//
+//            boardView.postInvalidate();
+//        } else if(board.grid[squareY][squareX] != 0 && n==0){
+//            board.insertZero(squareX,squareY);
+//            if(board.isPrefilled)
+//                toast("Can't delete prefilled value");
+//            boardView.postInvalidate();
+//        }
+//        else{
+//            toast("Space is taken.");
+//        }
        // toast("Number clicked: " + n);
     }
 

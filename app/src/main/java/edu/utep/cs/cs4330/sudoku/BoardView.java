@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import edu.utep.cs.cs4330.sudoku.model.Board;
+import edu.utep.cs.cs4330.sudoku.model.Square;
 
 /**
  * A special view class to display a Sudoku board modeled by the
@@ -159,12 +160,13 @@ public class BoardView extends View {
         int startX = (getWidth() - boardSize)/(getWidth()/2);
         int startY = (getHeight() - boardSize)/(getHeight()/2);
 
-        for(int i = 0;i< board.grid.length; i++){
-            for(int j = 0; j<board.grid.length; j++){
-                if(board.grid[i][j] != 0 && board.prefilled[i][j]==true){
-                    canvas.drawText(Integer.toString(board.grid[i][j]),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,prefilledColor);
-                }else if(board.grid[i][j] != 0){
-                    canvas.drawText(Integer.toString(board.grid[i][j]),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,textColor);
+        for(int i = 0;i< board.size; i++){
+            for(int j = 0; j<board.size; j++){
+                Square sqr = board.getSquare(i,j);
+                if(sqr.prefilled){
+                    canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,prefilledColor);
+                } else if(sqr.added){
+                    canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,textColor);
                 }
             }
         }
