@@ -109,37 +109,15 @@ public class MainActivity extends AppCompatActivity {
      *          or 0 for the delete button.
      */
     public void numberClicked(int n) {
-        String message = board.addNumber(squareX,squareY,n);
+        String message = "";
+        if(n == 0){
+            message = board.removeNumber(squareX,squareY);
+        }
+        else{
+            message = board.addNumber(squareX,squareY,n);
+        }
         toast(message);
         boardView.postInvalidate();
-
-        //Gets selected square's coords and inserts number
-//        if(board.grid[squareY][squareX] == 0){
-//            board.insertNumber(squareX, squareY, n);
-//            if(board.inSquare){
-//                toast("Number already in 3x3 square");
-//                board.inSquare = false;
-//            }
-//            else if(board.inRow){
-//                toast("Number already in row");
-//                board.inRow = false;
-//            }
-//            else if(board.inCol){
-//                toast("Number already in column");
-//                board.inCol = false;
-//            }
-//
-//            boardView.postInvalidate();
-//        } else if(board.grid[squareY][squareX] != 0 && n==0){
-//            board.insertZero(squareX,squareY);
-//            if(board.isPrefilled)
-//                toast("Can't delete prefilled value");
-//            boardView.postInvalidate();
-//        }
-//        else{
-//            toast("Space is taken.");
-//        }
-       // toast("Number clicked: " + n);
     }
 
     /**
@@ -165,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage("Are you sure you want to exit?");
+        alertDialogBuilder.setMessage("Are you sure you want a new game?");
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {

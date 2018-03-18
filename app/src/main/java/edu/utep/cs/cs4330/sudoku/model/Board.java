@@ -117,9 +117,13 @@ public class Board {
 		return true;
 	}
 
-	public void removeNumber(int x, int y) {
+	public String removeNumber(int x, int y) {
 		Square sqr = getSquare(x, y);
+		if(sqr.prefilled){
+		    return "PREFILLED VALUES CAN'T BE REMOVED";
+        }
 		sqr.added = false;
+		return "NUMBER REMOVED";
 	}
 
 	public String addNumber(int x, int y, int v) {
