@@ -60,8 +60,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        size = 4;
-        board = new Board(size, Board.Level.HARD_4);
+        size = 9;
+        board = new Board(size, Board.Level.EASY_9);
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);
@@ -109,8 +109,10 @@ public class MainActivity extends AppCompatActivity {
      *          or 0 for the delete button.
      */
     public void numberClicked(int n) {
-        board.addNumber(squareX,squareY,n);
+        String message = board.addNumber(squareX,squareY,n);
+        toast(message);
         boardView.postInvalidate();
+
         //Gets selected square's coords and inserts number
 //        if(board.grid[squareY][squareX] == 0){
 //            board.insertNumber(squareX, squareY, n);
@@ -167,7 +169,8 @@ public class MainActivity extends AppCompatActivity {
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                MainActivity.this.finish();
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                startActivity(intent);
             }
         });
         alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {

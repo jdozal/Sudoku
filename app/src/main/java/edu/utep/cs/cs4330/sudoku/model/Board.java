@@ -122,42 +122,38 @@ public class Board {
 		sqr.added = false;
 	}
 
-	public void addNumber(int x, int y, int v) {
+	public String addNumber(int x, int y, int v) {
 		Square sqr;
-		if (validNumber(x, y, v)) {
-			sqr = getSquare(x, y);
-			sqr.added = true;
-			sqr.setValue(v);
-			printBoard();
-		}
-	}
 
-	public boolean validNumber(int x, int y, int v) {
-		// check pre filled
-		if(getSquare(x, y).prefilled){
-			System.out.println("PREFILLED");
-			return false;
-		}
-		
-		// check column
-		if (!inColumn(x, v)) {
-			System.out.println("SAME ROW");
-			return false;
-		}
+        // check pre filled
+        if(getSquare(x, y).prefilled){
+            System.out.println("PREFILLED");
+            return "PREFILLED";
+        }
 
-		// check row
-		if (!inRow(y, v)) {
-			System.out.println("SAME COLUMN");
-			return false;
-		}
+        // check row
+        if (!inRow(x, v)) {
+            System.out.println("SAME ROW");
+            return "SAME ROW";
+        }
 
-		// check square
-		if (!inSquare(x, y, v)) {
-			System.out.println("SAME SQUARE");
-			return false;
-		}
+        // check column
+        if (!inColumn(y, v)) {
+            System.out.println("SAME COLUMN");
+            return "SAME COLUMN";
+        }
 
-		return true;
+        // check square
+        if (!inSquare(x, y, v)) {
+            System.out.println("SAME SQUARE");
+            return "SAME SQUARE";
+        }
+        sqr = getSquare(x, y);
+        sqr.added = true;
+        sqr.setValue(v);
+        printBoard();
+        return "VALID NUMBER ";
+
 	}
 
 	public boolean inRow(int x, int v) {
