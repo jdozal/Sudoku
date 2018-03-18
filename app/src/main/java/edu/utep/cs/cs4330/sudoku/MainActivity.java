@@ -173,4 +173,9 @@ public class MainActivity extends AppCompatActivity {
         params.width = buttonWidth;
         view.setLayoutParams(params);
     }
+
+    public void settingsClicked(View view) {
+        Intent i = new Intent(this, SettingsActivity.class);
+        startActivity(i);
+    }
 }
