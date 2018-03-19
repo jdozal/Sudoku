@@ -119,7 +119,6 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.solve:
                 solve();
-                toast("SOLVE");
                 return true;
             case R.id.check:
                 checkSolution();
@@ -172,6 +171,9 @@ public class MainActivity extends AppCompatActivity {
         }
         toast(message);
         boardView.postInvalidate();
+        if(board.isWin()){
+            toastCenter("YOU WIN");
+        }
     }
 
     /**
@@ -184,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         squareY = x;
         squareX = y;
         boardView.postInvalidate();
-        toast(String.format("Square selected: (%d, %d)", x, y));
+        //toast(String.format("Square selected: (%d, %d)", x, y));
     }
 
     /** Show a toast message. */

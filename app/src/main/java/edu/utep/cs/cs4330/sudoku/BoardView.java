@@ -66,10 +66,18 @@ public class BoardView extends View {
 
     private final Paint selectPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     {
-        int selectColor = Color.rgb(0, 186, 0);
+        int selectColor = Color.rgb(0, 0, 100);
         selectPaint.setColor(selectColor);
         selectPaint.setAlpha(80); // semi transparent
     }
+
+    private final Paint winPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    {
+        int winColor = Color.rgb(0, 186, 0);
+        winPaint.setColor(winColor);
+        winPaint.setAlpha(80); // semi transparent
+    }
+
     private final Paint paint = new Paint();
 
 
@@ -123,7 +131,12 @@ public class BoardView extends View {
     private void drawGrid(Canvas canvas) {
         final float maxCoord = maxCoord();
         int sqrt = (int)Math.sqrt(board.size);
-        canvas.drawRect(0, 0, maxCoord, maxCoord, boardPaint);
+        if(board.isWin()){
+            canvas.drawRect(0, 0, maxCoord, maxCoord, winPaint);
+        }
+        else {
+            canvas.drawRect(0, 0, maxCoord, maxCoord, boardPaint);
+        }
         Paint grayPaint = new Paint();
         grayPaint.setColor(Color.GRAY);
 
@@ -167,9 +180,9 @@ public class BoardView extends View {
         //
         Paint prefilledColor = new Paint();
         Paint textColor = new Paint();
-        textColor.setColor(Color.BLUE);
+        textColor.setColor(Color.BLACK);
         textColor.setTextSize(getTextSize());
-        prefilledColor.setColor(Color.BLACK);
+        prefilledColor.setColor(Color.GRAY);
         prefilledColor.setTextSize(getTextSize());
 
         int gridSpacing = getHeight()/ board.size;
