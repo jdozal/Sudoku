@@ -66,8 +66,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        size = 9;
-        board = new Board(size, Board.Level.EASY_9);
+        size = 4;
+        board = new Board(size, Board.Level.EASY_4);
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);

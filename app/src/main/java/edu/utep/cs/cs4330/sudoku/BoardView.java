@@ -218,9 +218,9 @@ public class BoardView extends View {
 
     private int getTextSize() {
         if(board.size == 9){
-            return 50;
+            return 30;
         }
-        return 150;
+        return 120;
     }
     /**
      * Given screen coordinates, locate the corresponding square of the board, or

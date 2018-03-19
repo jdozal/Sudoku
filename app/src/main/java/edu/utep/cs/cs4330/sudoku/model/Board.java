@@ -55,13 +55,17 @@ public class Board {
 			randomizeColumn();
 			randomizeRow();
 		}
-		setSolution();
+
 
 	}
 
 	void setSolution(){
         for (Square sq: grid) {
             Square sqSol = new Square(sq.x,sq.y, sq.getValue());
+            if(!sq.prefilled){
+                sqSol.prefilled = false;
+            }
+            sqSol.added = true;
             solutionGrid.add(sqSol);
         }
     }
@@ -122,6 +126,7 @@ public class Board {
 			getSquare(x, y).prefilled = false;
 			getSquare(x, y).added = false;
 		}
+		setSolution();
 	}
 
 	public boolean isWin() {
