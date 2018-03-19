@@ -8,8 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.support.v7.widget.Toolbar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
         size = 9;
         board = new Board(size, Board.Level.EASY_9);
         boardView = findViewById(R.id.boardView);
@@ -76,6 +82,57 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
+
+
+    public void solve(){
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("Are you sure you want to solve the current sudoku?");
+        alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                board.solveBoard();
+                boardView.postInvalidate();
+                board.printBoard();
+            }
+        });
+        alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+
+    }
+
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.solve:
+                solve();
+                toast("SOLVE");
+                return true;
+            case R.id.check:
+                checkSolution();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void checkSolution(){
+        toastCenter(board.check());
+
+    }
     /** Callback to be invoked when the new button is tapped. */
     public void newClicked(View view) {
         //Restart Activity
@@ -85,11 +142,8 @@ public class MainActivity extends AppCompatActivity {
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                Intent intent = getIntent();
-                finish();
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
                 startActivity(intent);
-                toast("New game.");
-                dialogInterface.cancel();
             }
         });
         alertDialogBuilder.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -129,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
     private void squareSelected(int x, int y) {
         squareY = x;
         squareX = y;
+        boardView.postInvalidate();
         toast(String.format("Square selected: (%d, %d)", x, y));
     }
 
@@ -136,6 +191,15 @@ public class MainActivity extends AppCompatActivity {
     private void toast(String msg) {
         Toast toast=Toast.makeText(this, msg, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.TOP,0,130);
+        toast.show();
+
+
+    }
+
+    /** Show a toast message. */
+    private void toastCenter(String msg) {
+        Toast toast=Toast.makeText(this, msg, Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
 
 

@@ -53,6 +53,9 @@ public class BoardView extends View {
     /** Translation of screen coordinates to display the grid at the center. */
     private float transY;
 
+    private int x = -1;
+    private int y = 0;
+
     /** Paint to draw the background of the grid. */
     private final Paint boardPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     {
@@ -61,6 +64,12 @@ public class BoardView extends View {
         boardPaint.setAlpha(80); // semi transparent
     }
 
+    private final Paint selectPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    {
+        int selectColor = Color.rgb(0, 186, 0);
+        selectPaint.setColor(selectColor);
+        selectPaint.setAlpha(80); // semi transparent
+    }
     private final Paint paint = new Paint();
 
 
@@ -98,8 +107,16 @@ public class BoardView extends View {
         if (board != null) {
             drawGrid(canvas);
             drawSquares(canvas);
+            drawSelection(canvas);
         }
         canvas.translate(-transX, -transY);
+    }
+
+    private void drawSelection(Canvas canvas) {
+        float squareSize = (float)maxCoord() /boardSize;
+        if(x != -1)
+            canvas.drawRect(x*squareSize,y*squareSize,x*squareSize+squareSize,y*squareSize+squareSize,selectPaint);
+
     }
 
     /** Draw horizontal and vertical grid lines. */
@@ -189,6 +206,8 @@ public class BoardView extends View {
                 if (xy >= 0) {
                     // xy encoded as: x * 100 + y
                     notifySelection(xy / 100, xy % 100);
+                    x = xy/100;
+                    y = xy%100;
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:

@@ -1,5 +1,7 @@
 package edu.utep.cs.cs4330.sudoku.model;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -22,6 +24,13 @@ public class Board {
 		setLevel();
 	}
 
+	public Square getSquareSol(int x, int y){
+        for (Square square : solutionGrid) {
+            if (square.x == x && square.y == y)
+                return square;
+        }
+        return null;
+    }
 	public Square getSquare(int x, int y) {
 		for (Square square : grid) {
 			if (square.x == x && square.y == y)
@@ -38,18 +47,24 @@ public class Board {
 			initialVal = (i % sqrt == 0) ? (i / sqrt) : initialVal + sqrt;
 			for (int j = 0; j < size; j++) {
 				Square sq = new Square(i, j, (initialVal + j) % size + 1);
-				sq.prefilled = true;
+                sq.prefilled = true;
 				grid.add(sq);
-				solutionGrid.add(sq);
 			}
 		}
 		for (int i = 0; i <= size*3; i++) {
 			randomizeColumn();
 			randomizeRow();
 		}
+		setSolution();
 
 	}
 
+	void setSolution(){
+        for (Square sq: grid) {
+            Square sqSol = new Square(sq.x,sq.y, sq.getValue());
+            solutionGrid.add(sqSol);
+        }
+    }
 	void randomizeColumn() {
 		Random rand = new Random();
 		int sqrt = (int) Math.sqrt(size);
@@ -126,6 +141,9 @@ public class Board {
 		return "NUMBER REMOVED";
 	}
 
+	public void solveBoard(){
+        grid=solutionGrid;
+    }
 	public String addNumber(int x, int y, int v) {
 		Square sqr;
 
@@ -222,7 +240,22 @@ public class Board {
 		}
 	}
 
-	void printBoard() {
+	public String check(){
+        for (int i = 0; i < this.size; i++) {
+            for (int j = 0; j < this.size; j++) {
+                Square sq = getSquare(i, j);
+                Square sqSol = getSquareSol(i,j);
+                if(sq.added&&!sq.prefilled){
+                    Log.d("test", String.valueOf(sq.getValue()));
+                    Log.d("test2", String.valueOf(sqSol.getValue()));
+                    if(sq.getValue() != sqSol.getValue())
+                    return "Not a possible solution";
+                }
+            }
+        }
+        return "There is a possible solution";
+    }
+	public void printBoard() {
 		System.out.println("\n+===+===+===+===+===+===+===+===+===+");
 		for (int i = 0; i < this.size; i++) {
 			for (int j = 0; j < this.size; j++) {
