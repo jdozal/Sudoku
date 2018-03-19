@@ -94,10 +94,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(android.R.style.Theme_Holo_Light_DarkActionBar);
+        setTheme(android.R.style.Theme_Holo_Light);
         super.onCreate(savedInstanceState);
         setupActionBar();
-
     }
 
     /**
