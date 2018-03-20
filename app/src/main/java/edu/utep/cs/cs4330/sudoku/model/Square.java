@@ -6,12 +6,12 @@ package edu.utep.cs.cs4330.sudoku.model;
 
 
 public class Square {
-    int x;
-    int y;
+    public int x;
+    public int y;
     private int value;
     public boolean prefilled;
     public boolean added;
-    Square(int x, int y, int v) {
+    public Square(int x, int y, int v) {
         this.x = x;
         this.y = y;
         prefilled = true;

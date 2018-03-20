@@ -1,24 +1,27 @@
 package edu.utep.cs.cs4330.sudoku.model;
 
 import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Random;
+import edu.utep.cs.cs4330.sudoku.Strategy;
+import edu.utep.cs.cs4330.sudoku.StrategySudoku;
 
 public class Board {
 	public int size;
 	public ArrayList<Square> grid;
-	ArrayList<Square> solutionGrid;
+	public ArrayList<Square> solutionGrid;
 	Level level;
+    Strategy strategy;
 
     public enum Level {
         EASY_9, MEDIUM_9, HARD_9, EASY_4, MEDIUM_4, HARD_4;
     }
-	public Board(int s, Level l) {
+	public Board(int s, Level l, final StrategySudoku strategy) {
 		grid = new ArrayList<Square>();
 		solutionGrid = new ArrayList<Square>();
 		this.size = s;
 		this.level = l;
+		this.strategy = strategy;
 		fillGrid();
 		printBoard();
 		setLevel();
@@ -58,6 +61,10 @@ public class Board {
 
 
 	}
+
+	public void solveBoard(){
+	    grid = strategy.solve(this);
+    }
 
 	void setSolution(){
         for (Square sq: grid) {
@@ -146,9 +153,6 @@ public class Board {
 		return "NUMBER REMOVED";
 	}
 
-	public void solveBoard(){
-        grid=solutionGrid;
-    }
 	public String addNumber(int x, int y, int v) {
 		Square sqr;
 

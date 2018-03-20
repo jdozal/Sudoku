@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         String set_size  = sharedPreferences.getString("size_list", "x");
         size = Integer.parseInt(set_size);
         setLevel(Integer.parseInt(set_level));
-        board = new Board(size, level);
+        board = new Board(size, level, new StrategySudoku());
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);
