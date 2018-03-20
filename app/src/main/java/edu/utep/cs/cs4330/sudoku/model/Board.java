@@ -183,7 +183,7 @@ public class Board {
         sqr.added = true;
         sqr.setValue(v);
         printBoard();
-        return "VALID NUMBER ";
+        return null;
 
 	}
 

@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
         else{
             message = board.addNumber(squareX,squareY,n);
         }
-        toast(message);
+        if(message!=null) toast(message);
         boardView.postInvalidate();
         if(board.isWin()){
             toastCenter("YOU WIN");
