@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
         boardView.addSelectionListener(this::squareSelected);
 
         numberButtons = new ArrayList<>(numberIds.length);
-        for (int i = 0; i <= size; i++) {
+        for (int i = 0; i < numberIds.length; i++) {
             final int number = i; // 0 for delete button
             View button = findViewById(numberIds[i]);
             button.setOnClickListener(e -> numberClicked(number));
