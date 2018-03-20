@@ -73,8 +73,8 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         // enter the key from your xml and the default value
-        String set_level  = sharedPreferences.getString("level_list", "x");
-        String set_size  = sharedPreferences.getString("size_list", "x");
+        String set_level  = sharedPreferences.getString("level_list", "0");
+        String set_size  = sharedPreferences.getString("size_list", "9");
         size = Integer.parseInt(set_size);
         setLevel(Integer.parseInt(set_level));
         board = new Board(size, level, new StrategySudoku());
