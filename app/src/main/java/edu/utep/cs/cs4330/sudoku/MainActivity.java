@@ -3,6 +3,8 @@ package edu.utep.cs.cs4330.sudoku;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -59,15 +61,20 @@ public class MainActivity extends AppCompatActivity {
     private int squareX;
     private int squareY;
     private int size;
-
+    private Board.Level level;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        size = 4;
-        board = new Board(size, Board.Level.EASY_4);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        // enter the key from your xml and the default value
+        String set_level  = sharedPreferences.getString("level_list", "x");
+        String set_size  = sharedPreferences.getString("size_list", "x");
+        size = Integer.parseInt(set_size);
+        setLevel(Integer.parseInt(set_level));
+        board = new Board(size, level);
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);
@@ -89,6 +96,32 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    public void setLevel(int lvl){
+        if(size == 9){
+            switch (lvl) {
+                case 0:  level = Board.Level.EASY_9;
+                    break;
+                case 1:  level = Board.Level.MEDIUM_9;
+                    break;
+                case 2:  level = Board.Level.HARD_9;
+                    break;
+                default:
+                    break;
+            }
+        }else{
+            switch (lvl) {
+                case 0:  level = Board.Level.EASY_4;
+                    break;
+                case 1:  level = Board.Level.MEDIUM_4;
+                    break;
+                case 2:  level = Board.Level.HARD_4;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
 
     public void solve(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);

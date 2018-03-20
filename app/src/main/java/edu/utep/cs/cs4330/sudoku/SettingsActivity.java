@@ -94,9 +94,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(android.R.style.Theme_Holo_Light);
-        super.onCreate(savedInstanceState);
+        setTheme(android.R.style.Theme_WithActionBar);
         setupActionBar();
+        super.onCreate(savedInstanceState);
     }
 
     /**
@@ -160,10 +160,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_general);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference("level_list"));
             bindPreferenceSummaryToValue(findPreference("size_list"));
         }
