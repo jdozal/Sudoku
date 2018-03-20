@@ -238,12 +238,18 @@ public class MainActivity extends AppCompatActivity {
         //toast(String.format("Square selected: (%d, %d)", x, y));
     }
 
+    /**
+     * Enable all buttons except for the las 5 numbers in the case of a 4x4 grid
+     */
     private void enableButtons(){
 
+        // enabling all numbers
         for (int i  = 0; i < numberIds.length; i++){
             View button = findViewById(numberIds[i]);
             button.setEnabled(true);
         }
+
+        // disabling 5,6,7,8,9 for a 4x4 grid
         if(size == 4){
             for(int j = 5; j < numberIds.length; j++) {
                 View button = findViewById(numberIds[j]);
@@ -252,6 +258,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Disables buttons for invalid numbers in current selection
+     */
     private void disableButtons(){
         // disable all buttons if current selection is prefilled value
         if(board.getSquare(squareX,squareY).prefilled){

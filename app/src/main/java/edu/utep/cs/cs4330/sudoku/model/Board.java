@@ -276,6 +276,12 @@ public class Board {
         return true;
 	}
 
+    /**
+     * Get list of numbers not pussible for that selection
+     * @param x coordinate x
+     * @param y coordinate y
+     * @return list of invalid numbers
+     */
 	public ArrayList<Integer> getInvalidNums(int x, int y){
 	    ArrayList<Integer> invalid = new ArrayList<Integer>();
         Square sqX,sqY,sqr;
