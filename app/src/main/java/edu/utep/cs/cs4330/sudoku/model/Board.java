@@ -276,6 +276,33 @@ public class Board {
         return true;
 	}
 
+	public ArrayList<Integer> getInvalidNums(int x, int y){
+	    ArrayList<Integer> invalid = new ArrayList<Integer>();
+        Square sqX,sqY,sqr;
+        Square curr =  getSquare(x,y);
+
+        // Check row and column
+        for(int i  = 0; i < size; i++){
+            sqX = getSquare(i,y);
+            sqY = getSquare(x,i);
+            if(sqX.added) invalid.add(sqX.getValue());
+            if(sqY.added) invalid.add(sqY.getValue());
+
+        }
+
+        // check 3x3 or 2x2 square
+        int sqrt = (int) Math.sqrt(size);
+        int row = (int) (Math.floor((y / sqrt))) * sqrt;
+        int col = (int) (Math.floor((x / sqrt))) * sqrt;
+        for (int i = row; i < row + sqrt; i++) {
+            for (int j = col; j < col + sqrt; j++) {
+                sqr = getSquare(j, i);
+                if(sqr.added) invalid.add(sqr.getValue());
+            }
+        }
+        return invalid;
+    }
+
     /**
      * Method to set level based on board size
      */

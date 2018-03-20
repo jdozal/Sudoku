@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
             numberButtons.add(button);
             setButtonWidth(button);
         }
+        enableButtons();
     }
 
     @Override
@@ -231,10 +232,41 @@ public class MainActivity extends AppCompatActivity {
     private void squareSelected(int x, int y) {
         squareY = x;
         squareX = y;
+        enableButtons();
+        disableButtons();
         boardView.postInvalidate();
         //toast(String.format("Square selected: (%d, %d)", x, y));
     }
 
+    private void enableButtons(){
+
+        for (int i  = 0; i < numberIds.length; i++){
+            View button = findViewById(numberIds[i]);
+            button.setEnabled(true);
+        }
+        if(size == 4){
+            for(int j = 5; j < numberIds.length; j++) {
+                View button = findViewById(numberIds[j]);
+                button.setEnabled(false);
+            }
+        }
+    }
+
+    private void disableButtons(){
+        // disable all buttons if current selection is prefilled value
+        if(board.getSquare(squareX,squareY).prefilled){
+            for(int i = 0; i < numberIds.length; i++) {
+                View button = findViewById(numberIds[i]);
+                button.setEnabled(false);
+            }
+            return;
+        }
+        ArrayList<Integer> invalid = board.getInvalidNums(squareX,squareY);
+        for(int curr: invalid){
+            View button = findViewById(numberIds[curr]);
+            button.setEnabled(false);
+        }
+    }
     /** Show a toast message. */
     private void toast(String msg) {
         Toast toast=Toast.makeText(this, msg, Toast.LENGTH_SHORT);
