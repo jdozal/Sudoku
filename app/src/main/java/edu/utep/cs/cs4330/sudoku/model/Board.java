@@ -6,6 +6,9 @@ import java.util.Random;
 import edu.utep.cs.cs4330.sudoku.Strategy;
 import edu.utep.cs.cs4330.sudoku.StrategySudoku;
 
+/**
+ * Board object to store list of squares, size and level of current game. Implements adding and removing methods.
+ */
 public class Board {
 	public int size;
 	public ArrayList<Square> grid;
@@ -27,6 +30,12 @@ public class Board {
 		setLevel();
 	}
 
+    /**
+     * Gets square with coordinates
+     * @param x x coordinate
+     * @param y y coordinate
+     * @return If found, returns Square in (x,y)
+     */
 	public Square getSquareSol(int x, int y){
         for (Square square : solutionGrid) {
             if (square.x == x && square.y == y)
@@ -43,8 +52,12 @@ public class Board {
 		return null;
 	}
 
+    /**
+     * Fills grid with valid sudoku game
+     */
 	void fillGrid() {
 		int initialVal = 0;
+		// setting basic sudoku
 		for (int i = 0; i < size; i++) {
 			int sqrt = (int) Math.sqrt(size);
 			initialVal = (i % sqrt == 0) ? (i / sqrt) : initialVal + sqrt;
@@ -54,6 +67,8 @@ public class Board {
 				grid.add(sq);
 			}
 		}
+
+		// randomizing columns and rows to create unique games in each session
 		for (int i = 0; i <= size*3; i++) {
 			randomizeColumn();
 			randomizeRow();
@@ -62,10 +77,16 @@ public class Board {
 
 	}
 
+    /**
+     * Implementation of strategy interface
+     */
 	public void solveBoard(){
 	    grid = strategy.solve(this);
     }
 
+    /**
+     * Distinguishing from added coordinates and prefilled coordinates
+     */
 	void setSolution(){
         for (Square sq: grid) {
             Square sqSol = new Square(sq.x,sq.y, sq.getValue());
@@ -76,7 +97,8 @@ public class Board {
             solutionGrid.add(sqSol);
         }
     }
-	void randomizeColumn() {
+
+    void randomizeColumn() {
 		Random rand = new Random();
 		int sqrt = (int) Math.sqrt(size);
 		int group = rand.nextInt(sqrt) * sqrt;
@@ -118,6 +140,10 @@ public class Board {
 
 	}
 
+    /**
+     * Removes squares from current valid game based on difficulty level
+     * @param number number of squares to be removed
+     */
 	void removeSquares(int number) {
 		Random rand = new Random();
 		int x = 0;
@@ -136,6 +162,10 @@ public class Board {
 		setSolution();
 	}
 
+    /**
+     * Checks if current board is a winning game
+     * @return true if complete game
+     */
 	public boolean isWin() {
 		for (Square square : grid) {
 			if (!square.added)
@@ -144,6 +174,12 @@ public class Board {
 		return true;
 	}
 
+    /**
+     * Method to remove squares from board
+     * @param x x coordinate
+     * @param y y coordinate
+     * @return message to be displayed in app
+     */
 	public String removeNumber(int x, int y) {
 		Square sqr = getSquare(x, y);
 		if(sqr.prefilled){
@@ -153,6 +189,13 @@ public class Board {
 		return "NUMBER REMOVED";
 	}
 
+    /**
+     * Method to add numbers to board
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param v value to be added
+     * @return warning message if is conflicting
+     */
 	public String addNumber(int x, int y, int v) {
 		Square sqr;
 
@@ -187,6 +230,9 @@ public class Board {
 
 	}
 
+    /**
+     * Check if value to be added is present in the same row
+     */
 	public boolean inRow(int x, int v) {
 		Square sqr;
 		for (int col = 0; col < size; col++) {
@@ -198,6 +244,9 @@ public class Board {
 		return true;
 	}
 
+    /**
+     * Check if value to be added is present in the same column
+     */
 	public boolean inColumn(int y, int v) {
 		Square sqr;
 		for (int row = 0; row < size; row++) {
@@ -208,7 +257,10 @@ public class Board {
 		}
 		return true;
 	}
-	
+
+    /**
+     * Check if value to be added is present in the same 3x3 or 2x2 square
+     */
 	public boolean inSquare(int x, int y, int v){
 		int sqrt = (int) Math.sqrt(size);
 		int row = (int) (Math.floor((y / sqrt))) * sqrt;
@@ -223,7 +275,10 @@ public class Board {
         }
         return true;
 	}
-	
+
+    /**
+     * Method to set level based on board size
+     */
 	void setLevel() {
 		switch (level) {
 		case EASY_9:
@@ -249,6 +304,10 @@ public class Board {
 		}
 	}
 
+    /**
+     * Method to check if there is a possible solution with the values provided.
+     * @return message corresponding to a solution found
+     */
 	public String check(){
         for (int i = 0; i < this.size; i++) {
             for (int j = 0; j < this.size; j++) {
@@ -264,6 +323,8 @@ public class Board {
         }
         return "There is a possible solution";
     }
+
+    // debugging purposes
 	public void printBoard() {
 		System.out.println("\n+===+===+===+===+===+===+===+===+===+");
 		for (int i = 0; i < this.size; i++) {

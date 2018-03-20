@@ -1,7 +1,7 @@
 package edu.utep.cs.cs4330.sudoku.model;
 
 /**
- * Created by jdozal on 3/17/18.
+ * Square object to store coordinates and values for each square in the board
  */
 
 

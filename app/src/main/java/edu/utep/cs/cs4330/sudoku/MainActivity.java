@@ -60,8 +60,11 @@ public class MainActivity extends AppCompatActivity {
 
     private int squareX;
     private int squareY;
+
+    /** Size and level of current game, controlled in the SettingsActivity */
     private int size;
     private Board.Level level;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,7 +99,12 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Sets level based on user size input in the Settings Activity
+     * @param lvl current level
+     */
     public void setLevel(int lvl){
+        // options for 9x9 board
         if(size == 9){
             switch (lvl) {
                 case 0:  level = Board.Level.EASY_9;
@@ -108,7 +116,9 @@ public class MainActivity extends AppCompatActivity {
                 default:
                     break;
             }
-        }else{
+        }
+        // options for 4x4 board
+        else{
             switch (lvl) {
                 case 0:  level = Board.Level.EASY_4;
                     break;
@@ -123,9 +133,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    /**
+     * Method to solve current board
+     */
     public void solve(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage("Are you sure you want to solve the current sudoku?");
+        alertDialogBuilder.setMessage("Are you sure you want to solve the current Sudoku?");
         alertDialogBuilder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
@@ -231,7 +244,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    /** Show a toast message. */
+    /** Show a toast message (Center of screen). */
     private void toastCenter(String msg) {
         Toast toast=Toast.makeText(this, msg, Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER, 0, 0);
