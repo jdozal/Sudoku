@@ -277,7 +277,44 @@ public class Board {
 	}
 
     /**
-     * Get list of numbers not pussible for that selection
+     * Get list of numbers possible for that selection
+     * @param x coordinate x
+     * @param y coordinate y
+     * @return list of invalid numbers
+     */
+    public ArrayList<Integer> getValidNums(int x, int y){
+        ArrayList<Integer> valid = new ArrayList<Integer>();
+        Square sqX,sqY,sqr;
+        Square curr =  getSquare(x,y);
+        // Add all numbers possible to array
+        for(int i = 1; i<= size; i++){
+            valid.add(i);
+        }
+
+        // Check row and column
+        for(int i  = 0; i < size; i++){
+            sqX = getSquare(i,y);
+            sqY = getSquare(x,i);
+            if(sqX.added) valid.remove(new Integer(sqX.getValue()));
+            if(sqY.added) valid.remove(new Integer(sqY.getValue()));
+
+        }
+
+        // check 3x3 or 2x2 square
+        int sqrt = (int) Math.sqrt(size);
+        int row = (int) (Math.floor((y / sqrt))) * sqrt;
+        int col = (int) (Math.floor((x / sqrt))) * sqrt;
+        for (int i = row; i < row + sqrt; i++) {
+            for (int j = col; j < col + sqrt; j++) {
+                sqr = getSquare(j, i);
+                if(sqr.added) valid.remove(new Integer(sqr.getValue()));
+            }
+        }
+        return valid;
+    }
+
+    /**
+     * Get list of numbers not possible for that selection
      * @param x coordinate x
      * @param y coordinate y
      * @return list of invalid numbers
@@ -315,13 +352,13 @@ public class Board {
 	void setLevel() {
 		switch (level) {
 		case EASY_9:
-			removeSquares(51);
+			removeSquares(30);
 			break;
 		case MEDIUM_9:
-			removeSquares(58);
+			removeSquares(40);
 			break;
 		case HARD_9:
-			removeSquares(64);
+			removeSquares(50);
 			break;
 		case EASY_4:
 			removeSquares(6);

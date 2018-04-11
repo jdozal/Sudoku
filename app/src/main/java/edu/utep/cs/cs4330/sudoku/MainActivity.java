@@ -1,6 +1,8 @@
 package edu.utep.cs.cs4330.sudoku;
 
-import android.content.Context;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +10,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.Menu;
@@ -17,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +47,20 @@ import edu.utep.cs.cs4330.sudoku.model.Board;
  * @author Yoonsik Cheon
  */
 public class MainActivity extends AppCompatActivity {
+
+    public static final java.util.UUID MY_UUID = java.util.UUID.fromString("DEADBEEF-0000-0000-0000-000000000000");
+
+    private BluetoothAdapter BA;
+
+    private  BluetoothSocket mmSocket;
+
+    private List<BluetoothDevice> listDevices;
+
+    private BluetoothDevice selectecDevice;
+
+    private int temp;
+
+    private ArrayList<String> nameDevices;
 
     private Board board;
 
@@ -81,7 +99,18 @@ public class MainActivity extends AppCompatActivity {
         boardView = findViewById(R.id.boardView);
         boardView.setBoard(board);
         boardView.addSelectionListener(this::squareSelected);
+        listDevices = new ArrayList<BluetoothDevice>();
+        nameDevices = new ArrayList<String>();
+        selectecDevice = null;
 
+        BA = BluetoothAdapter.getDefaultAdapter();
+
+        for(BluetoothDevice b : BA.getBondedDevices()){
+            listDevices.add(b);
+            nameDevices.add(b.getName());
+
+        }
+        Log.d("devices", listDevices.toString());
         numberButtons = new ArrayList<>(numberIds.length);
         for (int i = 0; i < numberIds.length; i++) {
             final int number = i; // 0 for delete button
@@ -91,6 +120,35 @@ public class MainActivity extends AppCompatActivity {
             setButtonWidth(button);
         }
         enableButtons();
+    }
+
+    public void on(View v){
+        if (!BA.isEnabled()) {
+            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(turnOn, 0);
+            Toast.makeText(getApplicationContext(), "Turned on",Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getApplicationContext(), "Already on", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+    public void ConnectThread(BluetoothDevice device) {
+        BluetoothSocket tmp = null;
+        try {
+                tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
+        }
+        catch (IOException e) {
+            Log.e("error_socket", "Socket: " + tmp.toString() + " create() failed", e);
+        }
+
+        mmSocket = tmp;
+        Log.d("socket", mmSocket.toString());
+    }
+
+    public void off(View v){
+        BA.disable();
+        Toast.makeText(getApplicationContext(), "Turned off" ,Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -330,5 +388,38 @@ public class MainActivity extends AppCompatActivity {
     public void settingsClicked(View view) {
         Intent i = new Intent(this, SettingsActivity.class);
         startActivity(i);
+    }
+
+    public void bluetoothClicked(View view) {
+
+        on(view);
+        // setup the alert builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Paired Devices");
+
+        String[] arrDevices = nameDevices.toArray(new String[nameDevices.size()]);
+        int checkedItem = 0;
+        builder.setSingleChoiceItems(arrDevices, checkedItem, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                toastCenter(arrDevices[which]);
+                temp = which;
+            }
+        });
+
+        builder.setPositiveButton("CONNECT", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                selectecDevice = listDevices.get(temp);
+                Log.d("devices", selectecDevice.getAddress());
+                ConnectThread(selectecDevice);
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+
+        // create and show the alert dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
     }
 }

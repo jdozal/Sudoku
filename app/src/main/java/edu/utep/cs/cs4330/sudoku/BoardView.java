@@ -184,6 +184,8 @@ public class BoardView extends View {
         textColor.setTextSize(getTextSize());
         prefilledColor.setColor(Color.GRAY);
         prefilledColor.setTextSize(getTextSize());
+        ArrayList<Integer> currValid= new ArrayList<Integer>();
+        int cornerX, cornerY;
 
         int gridSpacing = getHeight()/ board.size;
         int boardSize = board.size * gridSpacing;
@@ -198,11 +200,28 @@ public class BoardView extends View {
                     canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,prefilledColor);
                 } else if(sqr.added){
                     canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,textColor);
+                }else{
+                    cornerX = (startY + j*gridSpacing)+5;
+                    cornerY = (startX + (i+1)*gridSpacing)-8;
+                    currValid = board.getValidNums(i,j);
+                    drawValid(canvas, currValid, cornerX,cornerY);
                 }
             }
         }
 
 
+    }
+
+
+    private void drawValid(Canvas canvas, ArrayList<Integer> currValid, int cornerX, int cornerY) {
+        Paint validPaint = new Paint();
+        validPaint.setColor(Color.GRAY);
+        int sizeNum = getTextSizeSmall();
+        validPaint.setTextSize(sizeNum);
+        for(int curr:currValid){
+            canvas.drawText(Integer.toString(curr),cornerX,cornerY,validPaint);
+            cornerX+= sizeNum;
+        }
     }
 
 
@@ -229,11 +248,18 @@ public class BoardView extends View {
         return true;
     }
 
+    private int getTextSizeSmall() {
+        if(board.size == 9){
+            return 10;
+        }
+        return 30;
+    }
+
     private int getTextSize() {
         if(board.size == 9){
-            return 30;
+            return 20;
         }
-        return 120;
+        return 100;
     }
     /**
      * Given screen coordinates, locate the corresponding square of the board, or
