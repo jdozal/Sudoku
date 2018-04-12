@@ -211,7 +211,7 @@ public class NetworkAdapter {
         UNKNOWN (null);
 
         /** Message header. */
-        private final String header;
+        public final String header;
 
         MessageType(String header) {
             this.header = header;
