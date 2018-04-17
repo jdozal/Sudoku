@@ -180,9 +180,12 @@ public class BoardView extends View {
         //
         Paint prefilledColor = new Paint();
         Paint textColor = new Paint();
-        textColor.setColor(Color.BLACK);
+        Paint userColor = new Paint();
+        textColor.setColor(Color.MAGENTA);
         textColor.setTextSize(getTextSize());
-        prefilledColor.setColor(Color.GRAY);
+        userColor.setColor(Color.BLUE);
+        userColor.setTextSize(getTextSize());
+        prefilledColor.setColor(Color.DKGRAY);
         prefilledColor.setTextSize(getTextSize());
         ArrayList<Integer> currValid= new ArrayList<Integer>();
         int cornerX, cornerY;
@@ -198,9 +201,11 @@ public class BoardView extends View {
                 Square sqr = board.getSquare(i,j);
                 if(sqr.prefilled){
                     canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,prefilledColor);
+                } else if(sqr.otherUser){
+                    canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,userColor);
                 } else if(sqr.added){
                     canvas.drawText(Integer.toString(sqr.getValue()),(startY + j*gridSpacing)+20,(startX + (i+1)*gridSpacing)-15,textColor);
-                }else{
+                } else{
                     cornerX = (startY + j*gridSpacing)+5;
                     cornerY = (startX + (i+1)*gridSpacing)-8;
                     currValid = board.getValidNums(i,j);

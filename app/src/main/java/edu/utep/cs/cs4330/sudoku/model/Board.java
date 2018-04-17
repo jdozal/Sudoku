@@ -204,6 +204,7 @@ public class Board {
 		    return "PREFILLED VALUES CAN'T BE REMOVED";
         }
 		sqr.added = false;
+		sqr.otherUser = false;
 		return "NUMBER REMOVED";
 	}
 

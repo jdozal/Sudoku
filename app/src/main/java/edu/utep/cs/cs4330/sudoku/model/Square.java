@@ -11,12 +11,14 @@ public class Square {
     private int value;
     public boolean prefilled;
     public boolean added;
+    public boolean otherUser;
     public Square(int x, int y, int v) {
         this.x = x;
         this.y = y;
         prefilled = true;
         value = v;
         added = true;
+        otherUser = false;
     }
     public int getValue(){ return value;}
     public void setValue(int v){ value = v;}

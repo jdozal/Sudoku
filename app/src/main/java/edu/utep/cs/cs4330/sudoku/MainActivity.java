@@ -174,7 +174,6 @@ public class MainActivity extends AppCompatActivity {
                             switch (type) {
                                 case JOIN:
                                     Log.d("p2p-test", "JOIN");
-                                   // alertJoin(x,y,z,others);
                                     break;
                                 case JOIN_ACK:
                                     Log.d("p2p-test", "JOIN_ACK"); // x (response), y (size), others (board)
@@ -191,8 +190,8 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                     board = newBoard;
                                     boardView.setBoard(board);
-                                    enableButtons();
                                     boardView.postInvalidate();
+                                    enableButtons();
                                     networkAdapter.writeNewAck(true);
                                     runOnUiThread(new Runnable() {
                                         public void run() {
@@ -204,8 +203,12 @@ public class MainActivity extends AppCompatActivity {
                                     break;
                                 case FILL:
                                     Log.d("p2p-test", "FILL");     // x (x), y (y), z (number)
-                                    board.getSquare(y,x).setValue(z);
-                                    board.getSquare(y,x).added = z == 0 ? false : true;
+                                    if(z == 0) {
+                                        board.removeNumber(y,x);
+                                    } else {
+                                        board.getSquare(y,x).setValue(z);
+                                        board.getSquare(y, x).otherUser = true;
+                                    }
                                     boardView.postInvalidate();
                                     break;
                                 case FILL_ACK:
