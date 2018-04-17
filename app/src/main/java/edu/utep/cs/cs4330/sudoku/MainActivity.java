@@ -2,14 +2,19 @@ package edu.utep.cs.cs4330.sudoku;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothServerSocket;
-import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.wifi.WifiManager;
-import android.os.Handler;
+import android.net.wifi.WpsInfo;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -29,16 +34,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import static android.provider.Settings.NameValueTable.NAME;
 
 import edu.utep.cs.cs4330.sudoku.model.Board;
 
@@ -64,28 +65,19 @@ import edu.utep.cs.cs4330.sudoku.model.Board;
  */
 public class MainActivity extends AppCompatActivity {
 
-    private Socket socket;
-
-    private static final int CONNECTION_TIMEOUT = 5000; // in milliseconds
-
-    private Handler handler;
-    public static final java.util.UUID MY_UUID = java.util.UUID.fromString("DEADBEEF-0000-0000-0000-000000000000");
-
     private BluetoothAdapter BA;
-
-    private  BluetoothSocket mmSocket;
-
-    private  BluetoothServerSocket serverSocket;
-
+    private BluetoothDevice selectedDevice;
     private List<BluetoothDevice> listDevices;
 
-    private PrintStream logger;
-    private OutputStream outSt;
+    private WifiP2pManager mManager;
+    private WifiP2pManager.Channel mChannel;
+    private WiFiDirectBroadcastReceiver mReceiver;
+    private IntentFilter mIntentFilter;
+    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+    private WifiP2pDevice selectedWifi;
 
-    private NetworkAdapter na;
-    private NetworkAdapter.MessageListener naMess;
+    private Socket socket;
 
-    private BluetoothDevice selectedDevice;
 
     private String ip;
     private String peer_ip;
@@ -96,9 +88,6 @@ public class MainActivity extends AppCompatActivity {
     private Board board;
 
     private BoardView boardView;
-
-    String server = "";
-
 
     /** All the number buttons. */
 
@@ -137,12 +126,15 @@ public class MainActivity extends AppCompatActivity {
         listDevices = new ArrayList<BluetoothDevice>();
         nameDevices = new ArrayList<String>();
         selectedDevice = null;
-        naMess = null;
+        selectedWifi = null;
+        peers = new ArrayList<WifiP2pDevice>();
 
         // Getting ip
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
         Log.d("ip_number", ip);
+
+        openWifi();
 
         // Getting paired BT devices
         BA = BluetoothAdapter.getDefaultAdapter();
@@ -156,84 +148,44 @@ public class MainActivity extends AppCompatActivity {
             setButtonWidth(button);
         }
         enableButtons();
+        runNewChatServer();
 
-        openBT();
     }
 
-    private void openBT() {
-        outSt = new ByteArrayOutputStream(1024);
-        logger = new PrintStream(outSt);
-        naMess = new NetworkAdapter.MessageListener() {
+    private void openWifi(){
+        mIntentFilter = new IntentFilter();
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        mChannel = mManager.initialize(this, getMainLooper(), null);
+        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+
+        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
             @Override
-            public void messageReceived(NetworkAdapter.MessageType type, int x, int y, int z, int[] others) {
-                switch (type.header){
-                    case "join:":
-                        Log.d("Progress", "Progress");
+            public void onSuccess() {
+                Log.d("wifi-test", "enter success discover");
+            }
 
-                        ArrayList<Integer> param = new ArrayList<Integer>();
-                        for (int i = 0; i < board.size; i++) {
-                            for (int j = 0; j < board.size; j++) {
-                                if (board.getSquare(x,y).getValue() > 0) {
-                                    param.add(i);
-                                    param.add(j);
-                                    param.add(board.getSquare(x,y).getValue());
-                                    int[] temp = {i, j};
-//                                    for (int[] space: hint) {
-//                                        if(space[0] == temp[0] && space[1] == temp[1]){
-//                                            Log.d("Hint", "Added");
-//                                            param.add(1);
-//                                        }
-//                                    }
-//                                    if(param.size() % 4 != 0){
-//                                        param.add(0);
-//                                    }
-                                    param.add(0);
-                                }
-                            }
-                        }
-                        int[] ret = new int[param.size()];
-                        for (int i=0; i < ret.length; i++)
-                        {
-                            ret[i] = param.get(i).intValue();
-                        }
-                        na.writeJoinAck(board.size, ret);
-                        break;
-                    case "join_ack:":
-                        Log.d("Progress", "Progress");
-//                        board.size = x;
-//                        board.player = new int[y][y];
-//                        hint = new ArrayList<>();
-//                        for(int i = 0; i < others.length; i = i + 4){
-//                            board.player[others[i]][others[i + 1]] = others[i + 2];
-//                            if(others[i + 3] == 1){
-//                                int[] temp = {others[i], others[i + 1]};
-//                                hint.add(temp);
-//                            }
-//                        }
-//                        boardView.setHint(hint);
-//                        boardView.postInvalidate();
-                        break;
-                    case "new:":
+            @Override
+            public void onFailure(int reasonCode) {
+                Log.d("wifi-test", "enter failure");
+            }
+        });
+        mManager.requestPeers(mChannel, new WifiP2pManager.PeerListListener() {
 
-                        break;
-                    case "new_ack:":
+            @Override
+            public void onPeersAvailable(WifiP2pDeviceList peers) {
+                // TODO Auto-generated method stub
 
-                        break;
-                    case "fill:":
-                        Log.d("Progress", "Progress");
-//                        board.player[x][y] = z;
-//                        na.writeFillAck(x, y, z);
-//                        boardView.postInvalidate();
-                        break;
-                    case "fill_ack:":
-                        Log.d("Confirmation", "Indeed");
-                        break;
-                    case "quit:":
-
-                        break;
+                if (peers != null) {
+                    Log.d("wifi-test2", "found device!!! ");
                 }
             }
-        };
+        });
+        Log.d("wifi-test2", String.valueOf(peers.size()));
+
     }
 
     @Override
@@ -522,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("msn", peer_ip);
                 peer_port = p_port.getText().toString();
                 Log.d("msn", peer_port);
-                connectToServer(peer_ip, Integer.getInteger(peer_port));
+                //connectToServer(peer_ip, Integer.getInteger(peer_port));
 
             }
 
@@ -605,15 +557,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 switch(checkedItem[0]){
                     case 0:
-                        ConnectThread(selectedDevice);
-                        onClient(view);
+                        //ConnectThread(selectedDevice);
+                        //onClient(view);
                         break;
                     case 1:
-                        try {
-                            onServer(view);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+
                         break;
                     default:
                 }
@@ -625,37 +573,25 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-    private Socket createSocket(String host, int port) {
-        try {
-            Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(host, port), CONNECTION_TIMEOUT);
-            return socket;
-        } catch (Exception e) {
-            Log.d("socket", e.toString());
-        }
-        return null;
-    }
 
-    private void sendMessage(String msg) {
-        if (socket == null) {
-            toastCenter("Not connected!");
-            return;
-        }
 
-    }
+    private void wifiConnect(int which) {
+        WifiP2pDevice device = peers.get(which);
+        WifiP2pConfig config = new WifiP2pConfig();
+        config.deviceAddress = device.deviceAddress;
+        config.wps.setup = WpsInfo.PBC;
 
-    private void connectToServer(String server, int port) {
-        new Thread(() -> {
-            socket = createSocket(server, port);
-            if (socket != null) {
-                try {
-                    socket.connect(new InetSocketAddress(server, port), 3000); // in milliseconds
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d("wifi-test", "success connect");
             }
-            handler.post(() -> toastCenter(socket != null ? "Connected." : "Failed to connect!"));
-        }).start();
+
+            @Override
+            public void onFailure(int reasonCode) {
+                Log.d("wifi-test", "failure connect");
+            }
+        });
     }
 
     public void on(View v){
@@ -701,142 +637,32 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-    public void onBT(View view) throws IOException {
-        if (!BA.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnOn, 0);
-            Toast.makeText(getApplicationContext(), "Turned on", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Already on", Toast.LENGTH_LONG).show();
-            Intent getVisible = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            startActivityForResult(getVisible, 0);
-            AcceptThread();
-            runServer();
-        }
+
+    /* register the broadcast receiver with the intent values to be matched */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mReceiver, mIntentFilter);
     }
-    public void AcceptThread(){
-            // Use a temporary object that is later assigned to mmServerSocket
-            // because mmServerSocket is final.
-            BluetoothServerSocket tmp = null;
-            try {
-                // MY_UUID is the app's UUID string, also used by the client code.
-                tmp = BA.listenUsingRfcommWithServiceRecord(NAME, MY_UUID);
-            } catch (IOException e) {
-                Log.e("Not listening", "Socket's listen() method failed", e);
-            }
-            serverSocket = tmp;
+    /* unregister the broadcast receiver */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mReceiver);
     }
 
-    public void runServer() throws IOException {
-        BluetoothSocket socket = null;
-        // Keep listening until exception occurs or a socket is returned.
-        while (true) {
-            try {
-                Log.e("test", "Socket's accept()");
-                socket = serverSocket.accept(10000);
-            } catch (IOException e) {
-                Log.e("Not accepting", "Socket's accept() method failed", e);
-                break;
-            }
 
-            if (socket != null) {
-                // A connection was accepted. Perform work associated with
-                // the connection in a separate thread.
-                toast("Connected");
-                na = new NetworkAdapter(socket, logger);
-                na.setMessageListener(naMess);
-                na.receiveMessagesAsync();
-                serverSocket.close();
-                break;
-            }
-            else {
-                toast("Null socket");
-            }
-        }
-    }
-
-    public void runClient() {
-        // Cancel discovery because it otherwise slows down the connection.
-        BA.cancelDiscovery();
-
+    private void runNewChatServer() {
+        ServerSocket serverSocket;
         try {
-            // Connect to the remote device through the socket. This call blocks
-            // until it succeeds or throws an exception.
-            mmSocket.connect();
-        } catch (IOException connectException) {
-            // Unable to connect; close the socket and return.
-            try {
-                mmSocket.close();
-            } catch (IOException closeException) {
-                Log.e("Close socket", "Could not close the client socket", closeException);
-            }
-            return;
+            serverSocket = new ServerSocket(8000);
+            Log.d("wifi-test", "waaiting");
+            socket = serverSocket.accept();
+
+            Log.d("wifi-test","a new client Connected");
+        } catch (IOException e) {
         }
 
-        // The connection attempt succeeded. Perform work associated with
-        // the connection in a separate thread.
-
-        toast("Connected");
-        if(mmSocket == null){
-            toast("Null client");
-        }else {
-            na = new NetworkAdapter(mmSocket, logger);
-            na.setMessageListener(naMess);
-            na.receiveMessagesAsync();
-            na.writeJoin();
-        }
-    }
-
-    public void ConnectThread(BluetoothDevice device) {
-        BluetoothSocket tmp = null;
-        selectedDevice = device;
-        try {
-            tmp = device.createRfcommSocketToServiceRecord(MY_UUID);
-        }
-        catch (IOException e) {
-            Log.e("error_socket", "Socket: " + tmp.toString() + " create() failed", e);
-        }
-
-        mmSocket = tmp;
-        Log.d("socket", selectedDevice.toString());
-    }
-
-    //Client Functions
-    public void onClient(View v){
-        if (!BA.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnOn, 0);
-            listDevices = new ArrayList<BluetoothDevice>();
-            nameDevices = new ArrayList<String>();
-            for (BluetoothDevice b : BA.getBondedDevices()) {
-                listDevices.add(b);
-                nameDevices.add(b.getName());
-            }
-            Toast.makeText(getApplicationContext(), "Turned on",Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Already on", Toast.LENGTH_LONG).show();
-            listDevices = new ArrayList<BluetoothDevice>();
-            nameDevices = new ArrayList<String>();
-            for (BluetoothDevice b : BA.getBondedDevices()) {
-                listDevices.add(b);
-                nameDevices.add(b.getName());
-            }
-        }
-    }
-
-    //Server Functions
-    public void onServer(View v) throws IOException {
-        if (!BA.isEnabled()) {
-            Intent turnOn = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(turnOn, 0);
-            Toast.makeText(getApplicationContext(), "Turned on", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Already on", Toast.LENGTH_LONG).show();
-            Intent getVisible = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-            startActivityForResult(getVisible, 0);
-            AcceptThread();
-            runServer();
-        }
     }
 
 }
