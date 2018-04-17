@@ -204,7 +204,7 @@ public class BoardView extends View {
                     cornerX = (startY + j*gridSpacing)+5;
                     cornerY = (startX + (i+1)*gridSpacing)-8;
                     currValid = board.getValidNums(i,j);
-                    drawValid(canvas, currValid, cornerX,cornerY);
+                    //drawValid(canvas, currValid, cornerX,cornerY);
                 }
             }
         }

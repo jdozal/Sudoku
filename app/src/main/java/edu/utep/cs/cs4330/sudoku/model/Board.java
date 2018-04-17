@@ -29,7 +29,25 @@ public class Board {
 		printBoard();
 		setLevel();
 	}
+	public Board(int s, Level l, final StrategySudoku strategy, boolean empty){
+		grid = new ArrayList<Square>();
+		this.size = s;
+		this.level = l;
+		this.strategy = strategy;
+		emptyGrid();
+	}
 
+	public void emptyGrid(){
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				Square sq = new Square(i, j, 0);
+				sq.added = false;
+				sq.prefilled = false;
+				grid.add(sq);
+			}
+		}
+
+	}
     /**
      * Gets square with coordinates
      * @param x x coordinate

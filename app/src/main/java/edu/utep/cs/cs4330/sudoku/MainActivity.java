@@ -35,6 +35,7 @@ import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -71,16 +72,17 @@ public class MainActivity extends AppCompatActivity {
 
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
-    private WiFiDirectBroadcastReceiver mReceiver;
     private IntentFilter mIntentFilter;
     private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
     private WifiP2pDevice selectedWifi;
 
+    private static final int PORT_NUMBER = 8000;
+    private static final int CONNECTION_TIMEOUT = 5000; // in milliseconds
+
+    private NetworkAdapter networkAdapter;
     private Socket socket;
-
-
+    private String serverIP;
     private String ip;
-    private String peer_ip;
     private String peer_port;
     
     private ArrayList<String> nameDevices;
@@ -132,9 +134,7 @@ public class MainActivity extends AppCompatActivity {
         // Getting ip
         WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
         ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        Log.d("ip_number", ip);
-
-        openWifi();
+        Log.d("p2p-test", "myIP " + ip);
 
         // Getting paired BT devices
         BA = BluetoothAdapter.getDefaultAdapter();
@@ -148,45 +148,131 @@ public class MainActivity extends AppCompatActivity {
             setButtonWidth(button);
         }
         enableButtons();
-        runNewChatServer();
 
     }
 
-    private void openWifi(){
-        mIntentFilter = new IntentFilter();
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-        mChannel = mManager.initialize(this, getMainLooper(), null);
-        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+    private void connectClicked(View view) {
+        if (isConnected()) {
+            toast("Already connected!");
+        } else {
+            connectToServer(serverIP, PORT_NUMBER);
+        }
+    }
 
-        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d("wifi-test", "enter success discover");
-            }
+    private boolean isConnected() {
+        return socket != null;
+    }
 
-            @Override
-            public void onFailure(int reasonCode) {
-                Log.d("wifi-test", "enter failure");
-            }
-        });
-        mManager.requestPeers(mChannel, new WifiP2pManager.PeerListListener() {
+    private void connectToServer(String server, int port) {
+        new Thread(() -> {
+                try {
+                    socket = new Socket(server, port);
+                    //socket.connect(new InetSocketAddress(server, port), 3000); // in milliseconds
+                    networkAdapter = new NetworkAdapter(socket);
+                    networkAdapter.setMessageListener(new NetworkAdapter.MessageListener() {
+                        public void messageReceived(NetworkAdapter.MessageType type, int x, int y, int z, int[] others) {
+                            switch (type) {
+                                case JOIN:
+                                    Log.d("p2p-test", "JOIN");
+                                   // alertJoin(x,y,z,others);
+                                    break;
+                                case JOIN_ACK:
+                                    Log.d("p2p-test", "JOIN_ACK"); // x (response), y (size), others (board)
+                                    break;
+                                case NEW: Log.d("p2p-test", "NEW");      // x (size), others (board)
+                                    Board newBoard = new Board(x,level,new StrategySudoku(), true);
 
-            @Override
-            public void onPeersAvailable(WifiP2pDeviceList peers) {
-                // TODO Auto-generated method stub
-
-                if (peers != null) {
-                    Log.d("wifi-test2", "found device!!! ");
+                                    for(int i = 0; i < others.length-4; i+=4){
+                                        newBoard.getSquare(others[i+1],others[i]).setValue(others[i+2]);
+                                        if(others[i+3]==1)
+                                            newBoard.getSquare(others[i+1],others[i]).prefilled = true;
+                                        else
+                                            newBoard.getSquare(others[i+1],others[i]).prefilled = false;
+                                    }
+                                    board = newBoard;
+                                    boardView.setBoard(board);
+                                    enableButtons();
+                                    boardView.postInvalidate();
+                                    networkAdapter.writeNewAck(true);
+                                    runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            toast("Connection successful");
+                                        }
+                                    });
+                                    break;
+                                case NEW_ACK: Log.d("p2p-test", "NEW_ACK");  // x (response)
+                                    break;
+                                case FILL:
+                                    Log.d("p2p-test", "FILL");     // x (x), y (y), z (number)
+                                    board.getSquare(y,x).setValue(z);
+                                    board.getSquare(y,x).added = z == 0 ? false : true;
+                                    boardView.postInvalidate();
+                                    break;
+                                case FILL_ACK:
+                                    Log.d("p2p-test", "FILL_ACK"); // x (x), y (y), z (number)
+                                    runOnUiThread(new Runnable() {
+                                        public void run() {
+                                            toast("Insertion successful");
+                                        }
+                                    });
+                                    break;
+                                case QUIT: Log.d("p2p-test", "QUIT");
+                                    break;
+                            }
+                        }
+                    });
+//                    if(networkAdapter != null) {
+//                        Log.d("p2p-test","THIS");
+//                        networkAdapter.writeJoin();
+//                    }
+                    // receive messages asynchronously
+                    networkAdapter.receiveMessagesAsync();
+                   // socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            }
-        });
-        Log.d("wifi-test2", String.valueOf(peers.size()));
 
+        }).start();
     }
+
+
+
+
+//    private void openWifi(){
+//        mIntentFilter = new IntentFilter();
+//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+//        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+//        mChannel = mManager.initialize(this, getMainLooper(), null);
+//        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
+//
+//        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+//            @Override
+//            public void onSuccess() {
+//                Log.d("wifi-test", "enter success discover");
+//            }
+//
+//            @Override
+//            public void onFailure(int reasonCode) {
+//                Log.d("wifi-test", "enter failure");
+//            }
+//        });
+//        mManager.requestPeers(mChannel, new WifiP2pManager.PeerListListener() {
+//
+//            @Override
+//            public void onPeersAvailable(WifiP2pDeviceList peers) {
+//                // TODO Auto-generated method stub
+//
+//                if (peers != null) {
+//                    Log.d("wifi-test2", "found device!!! ");
+//                }
+//            }
+//        });
+//        Log.d("wifi-test2", String.valueOf(peers.size()));
+//
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -311,6 +397,7 @@ public class MainActivity extends AppCompatActivity {
         else{
             message = board.addNumber(squareX,squareY,n);
         }
+        networkAdapter.writeFill(squareY,squareX,n);
         if(message!=null) toast(message);
         boardView.postInvalidate();
         if(board.isWin()){
@@ -455,12 +542,12 @@ public class MainActivity extends AppCompatActivity {
         layout.addView(peer_text);
         // Add a TextView here for the "Title" label, as noted in the comments
         final EditText p_ip = new EditText(this);
-        p_ip.setHint(ip);
+        p_ip.setText(ip);
         layout.addView(p_ip); // Notice this is an add method
 
         // Add another TextView here for the "Description" label
         final EditText p_port = new EditText(this);
-        p_port.setHint("8000");
+        p_port.setText("8000");
         layout.addView(p_port); // Another add method
 
         builder.setTitle("Pairing");
@@ -470,12 +557,11 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("CONNECT", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                peer_ip = p_ip.getText().toString();
-                Log.d("msn", peer_ip);
+                serverIP = p_ip.getText().toString();
+                Log.d("p2p-test", serverIP);
                 peer_port = p_port.getText().toString();
-                Log.d("msn", peer_port);
-                //connectToServer(peer_ip, Integer.getInteger(peer_port));
-
+                Log.d("p2p-test", peer_port);
+                connectClicked(view);
             }
 
         });
@@ -575,24 +661,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void wifiConnect(int which) {
-        WifiP2pDevice device = peers.get(which);
-        WifiP2pConfig config = new WifiP2pConfig();
-        config.deviceAddress = device.deviceAddress;
-        config.wps.setup = WpsInfo.PBC;
-
-        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d("wifi-test", "success connect");
-            }
-
-            @Override
-            public void onFailure(int reasonCode) {
-                Log.d("wifi-test", "failure connect");
-            }
-        });
-    }
 
     public void on(View v){
         if (!BA.isEnabled()) {
@@ -642,27 +710,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mReceiver, mIntentFilter);
     }
     /* unregister the broadcast receiver */
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mReceiver);
     }
 
-
-    private void runNewChatServer() {
-        ServerSocket serverSocket;
-        try {
-            serverSocket = new ServerSocket(8000);
-            Log.d("wifi-test", "waaiting");
-            socket = serverSocket.accept();
-
-            Log.d("wifi-test","a new client Connected");
-        } catch (IOException e) {
-        }
-
-    }
 
 }

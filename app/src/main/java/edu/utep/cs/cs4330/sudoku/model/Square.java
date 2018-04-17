@@ -19,7 +19,7 @@ public class Square {
         added = true;
     }
     public int getValue(){ return value;}
-    void setValue(int v){ value = v;}
+    public void setValue(int v){ value = v;}
 
 
 }
