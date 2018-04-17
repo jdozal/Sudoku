@@ -2,20 +2,16 @@ package edu.utep.cs.cs4330.sudoku;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.wifi.WifiManager;
-import android.net.wifi.WpsInfo;
-import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -35,11 +31,8 @@ import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import edu.utep.cs.cs4330.sudoku.model.Board;
@@ -173,15 +166,13 @@ public class MainActivity extends AppCompatActivity {
                         public void messageReceived(NetworkAdapter.MessageType type, int x, int y, int z, int[] others) {
                             switch (type) {
                                 case JOIN:
-                                    Log.d("p2p-test", "JOIN");
-                                    break;
                                 case JOIN_ACK:
                                     Log.d("p2p-test", "JOIN_ACK"); // x (response), y (size), others (board)
-                                    break;
+
                                 case NEW: Log.d("p2p-test", "NEW");      // x (size), others (board)
                                     Board newBoard = new Board(x,level,new StrategySudoku(), true);
 
-                                    for(int i = 0; i < others.length-4; i+=4){
+                                    for(int i = 0; i < others.length-3; i+=4){
                                         newBoard.getSquare(others[i+1],others[i]).setValue(others[i+2]);
                                         if(others[i+3]==1)
                                             newBoard.getSquare(others[i+1],others[i]).prefilled = true;
@@ -224,11 +215,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     });
-//                    if(networkAdapter != null) {
-//                        Log.d("p2p-test","THIS");
-//                        networkAdapter.writeJoin();
-//                    }
-                    // receive messages asynchronously
                     networkAdapter.receiveMessagesAsync();
                    // socket.close();
                 } catch (IOException e) {
@@ -238,44 +224,6 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-
-
-
-//    private void openWifi(){
-//        mIntentFilter = new IntentFilter();
-//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-//        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
-//        mManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
-//        mChannel = mManager.initialize(this, getMainLooper(), null);
-//        mReceiver = new WiFiDirectBroadcastReceiver(mManager, mChannel, this);
-//
-//        mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-//            @Override
-//            public void onSuccess() {
-//                Log.d("wifi-test", "enter success discover");
-//            }
-//
-//            @Override
-//            public void onFailure(int reasonCode) {
-//                Log.d("wifi-test", "enter failure");
-//            }
-//        });
-//        mManager.requestPeers(mChannel, new WifiP2pManager.PeerListListener() {
-//
-//            @Override
-//            public void onPeersAvailable(WifiP2pDeviceList peers) {
-//                // TODO Auto-generated method stub
-//
-//                if (peers != null) {
-//                    Log.d("wifi-test2", "found device!!! ");
-//                }
-//            }
-//        });
-//        Log.d("wifi-test2", String.valueOf(peers.size()));
-//
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -556,6 +504,14 @@ public class MainActivity extends AppCompatActivity {
         builder.setTitle("Pairing");
         builder.setView(layout);
 
+        builder.setNeutralButton("SETTINGS", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Intent intentOpenWifiSettings = new Intent();
+                intentOpenWifiSettings.setAction(Settings.ACTION_WIFI_SETTINGS);
+                startActivity(intentOpenWifiSettings);
+            }
+        });
         // Set up the buttons
         builder.setPositiveButton("CONNECT", new DialogInterface.OnClickListener() {
             @Override
@@ -679,7 +635,7 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Type:");
 
-        String[] connect = {"Wifi p2p","Bluetooth"};
+        String[] connect = {"Wifi","Bluetooth"};
         final int[] checkedItem = {0};
         builder.setSingleChoiceItems(connect, checkedItem[0], new DialogInterface.OnClickListener() {
             @Override
